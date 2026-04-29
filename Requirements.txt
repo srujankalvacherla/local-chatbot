@@ -1,4 +1,22 @@
-openai>=1.0.0
-python-dotenv>=1.0.0
-rich>=13.0.0
-streamlit>=1.35.0
+# ── HTTP & environment ────────────────────────────────
+openai>=1.0.0          # still used by app.py for the OpenAI client (optional path)
+python-dotenv>=1.0.0   # loads .env file into os.environ
+
+# ── Terminal UI ───────────────────────────────────────
+rich>=13.0.0           # pretty terminal output (colours, markdown rendering)
+
+# ── Web UI ────────────────────────────────────────────
+streamlit>=1.35.0      # browser-based chat UI
+
+# ── LangChain core ────────────────────────────────────
+# langchain-core: base abstractions (Runnable, BaseMessage, etc.)
+#   You rarely import from here directly, but every other LangChain
+#   package depends on it.
+langchain-core>=0.2.0
+
+# langchain: the main library — chains, memory, prompt templates
+langchain>=0.2.0
+
+# langchain-ollama: adapter that connects LangChain → your local Ollama server
+#   Gives us ChatOllama, which speaks to localhost:11434
+langchain-ollama>=0.1.0

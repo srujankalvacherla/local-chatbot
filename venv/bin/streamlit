@@ -1,4 +1,4 @@
-#!/Users/srujank/Documents/Projects/local-chatbot/venv/bin/python3
+#!/Users/srujank/Documents/Projects/local-chatbot/venv/bin/python3.12
 import sys
 from streamlit.web.cli import main
 if __name__ == '__main__':

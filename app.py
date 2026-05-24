@@ -1,32 +1,35 @@
 """
-app.py — Phase 3: Streamlit UI (minimal changes from Phase 2)
-=============================================================
-What changed from Phase 2
---------------------------
-1. Imports: now calls chat_once() and clear_memory() from chat.py
-   instead of stream_response() with a history list.
+app.py — Phase 4: Streamlit UI with RAG mode toggle
+=====================================================
+What's new from Phase 3
+------------------------
+1. Mode toggle in sidebar: "Chat" (Phase 3 LLMChain) vs "RAG" (RetrievalQA)
+2. Document uploader: drag-and-drop files → saved to docs/ → indexed
+3. Index stats: shows how many chunks are stored in ChromaDB
+4. Source display: after a RAG answer, shows which document chunks were used
 
-2. History display: we fetch LangChain's memory messages for rendering
-   instead of maintaining our own session_state list.
-
-3. Clear button: calls clear_memory() to wipe LangChain's internal state.
-
-Everything else — page config, sidebar, chat_input — is identical.
-This demonstrates that separating UI from LLM logic pays off immediately:
-a big internal change (Phase 2 → Phase 3) barely touched this file.
+Learning goals
+--------------
+  - See how two completely separate chains (LLMChain vs RetrievalQA) share
+    the same UI without either knowing about the other
+  - Understand st.file_uploader() for accepting user files
+  - See how "source documents" prove where the answer came from
 
 Run:
   streamlit run app.py
 """
 
 import streamlit as st
+import os
+from pathlib import Path
 from chat import chat_once, clear_memory, get_memory_messages, get_model
-# remove chat_once, clear_memory, get_memory_messages from import
-from chat import build_chain
+from rag import index_documents, rag_answer, get_index_stats, clear_index
+
+DOCS_DIR = os.getenv("DOCS_DIR", "./docs")
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Local Chatbot · Phase 3",
+    page_title="Local Chatbot · Phase 4",
     page_icon="🤖",
     layout="centered",
 )
@@ -40,6 +43,9 @@ st.markdown("""
                padding:2px 8px; border-radius:99px; opacity:.7; }
 .phase-badge { font-size:11px; background:#E1F5EE; color:#085041;
                padding:2px 8px; border-radius:99px; }
+.source-box { border:1px solid rgba(128,128,128,.2); border-radius:8px;
+              padding:10px 14px; margin-top:6px; font-size:12px;
+              color: var(--secondary-text-color); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -47,78 +53,154 @@ st.markdown(f"""
 <div class="app-header">
   <span style="font-size:1.4rem;font-weight:600;">Local Chatbot</span>
   <span class="model-badge">{get_model()}</span>
-  <span class="phase-badge">Phase 3 · LangChain</span>
+  <span class="phase-badge">Phase 4 · RAG</span>
 </div>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("### Settings")
-    st.slider("Temperature", 0.0, 1.0, 0.7, 0.05,
-              help="Higher = more creative. Restart the app to apply changes.")
+    st.markdown("### Mode")
+
+    # This toggle is the key new addition — switches between the two chains
+    mode = st.radio(
+        "Answer using:",
+        ["💬 Chat (general)", "📄 RAG (your documents)"],
+        help=("Chat uses the model's own knowledge.\n"
+              "RAG answers from documents you upload."),
+    )
+    rag_mode = mode.startswith("📄")
 
     st.markdown("---")
+    st.markdown("### Documents")
+
+    # Show current index status
+    stats = get_index_stats()
+    if stats["indexed"]:
+        st.success(f"{stats['chunks']} chunks indexed")
+    else:
+        st.warning("No documents indexed yet")
+
+    # File uploader — saves files to docs/ folder
+    uploaded = st.file_uploader(
+        "Upload PDF or TXT files",
+        type=["pdf", "txt", "md"],
+        accept_multiple_files=True,
+    )
+    if uploaded:
+        Path(DOCS_DIR).mkdir(exist_ok=True)
+        for f in uploaded:
+            dest = Path(DOCS_DIR) / f.name
+            dest.write_bytes(f.read())
+        st.caption(f"Saved {len(uploaded)} file(s) to docs/")
+
+    # Index button — runs the full indexing pipeline
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Index docs", use_container_width=True):
+            with st.spinner("Indexing…"):
+                n_docs, n_chunks = index_documents()
+            if n_chunks:
+                st.success(f"{n_chunks} chunks from {n_docs} pages")
+            else:
+                st.error("No documents found in docs/ folder")
+            st.rerun()
+    with col2:
+        if st.button("Clear index", use_container_width=True):
+            clear_index()
+            st.rerun()
+
+    st.markdown("---")
+
+    # Chat memory controls (only relevant in Chat mode)
+    st.markdown("### Chat memory")
+    msgs = get_memory_messages()
+    st.metric("Messages", len(msgs))
     if st.button("Clear conversation", use_container_width=True):
-        clear_memory()          # ← calls LangChain memory.clear()
+        clear_memory()
         st.rerun()
 
     st.markdown("---")
-    st.markdown("### What's new in Phase 3")
+    st.markdown("### How Phase 4 works")
     st.markdown("""
-**LangChain** manages conversation history automatically via `ConversationBufferMemory`.
+**Indexing** (runs once):
+docs → chunks → embeddings → ChromaDB
 
-**ChatPromptTemplate** formats the system prompt + history + user message into a structured prompt.
+**RAG query** (every question):
+question → embed → retrieve top-k chunks → LLM answers from context
 
-**LLMChain** wires memory + template + model into one callable unit.
-
-You no longer maintain a `history` list manually.
+**Chat mode** still uses Phase 3's LLMChain with memory.
     """)
 
-    # Show raw memory contents — great for learning!
-    st.markdown("---")
-    msgs = get_memory_messages()
-    st.markdown(f"### Memory ({len(msgs)} messages)")
-    if msgs:
-        for m in msgs:
-            role = type(m).__name__.replace("Message", "")
-            st.caption(f"**{role}:** {str(m.content)[:80]}…" if len(str(m.content)) > 80 else f"**{role}:** {m.content}")
-    else:
-        st.caption("Empty — start a conversation!")
+# ── Session state ─────────────────────────────────────────────────────────────
+# We keep a separate display history for RAG mode because RetrievalQA doesn't
+# use ConversationBufferMemory — it's stateless by default.
+if "rag_history" not in st.session_state:
+    st.session_state.rag_history = []  # list of {"role", "content", "sources"}
 
-# ── Render conversation from LangChain memory ─────────────────────────────────
-# Instead of session_state history, we read directly from LangChain's memory.
-# LangChain stores pairs: HumanMessage, AIMessage, HumanMessage, AIMessage...
-msgs = get_memory_messages()
-for msg in msgs:
-    role = "user" if "Human" in type(msg).__name__ else "assistant"
-    with st.chat_message(role):
-        st.markdown(msg.content)
-
-
-# Persist chain across Streamlit reruns
-if "chain" not in st.session_state:
-    from chat import build_chain
-    st.session_state.chain = build_chain()
-
-chain = st.session_state.chain
-
-
+# ── Render conversation ───────────────────────────────────────────────────────
+if rag_mode:
+    # RAG mode: render from session_state rag_history
+    for msg in st.session_state.rag_history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+            # Show source documents below assistant replies
+            if msg["role"] == "assistant" and msg.get("sources"):
+                with st.expander(f"Sources ({len(msg['sources'])} chunks used)"):
+                    for i, doc in enumerate(msg["sources"], 1):
+                        src = doc.metadata.get("source", "unknown")
+                        page = doc.metadata.get("page", "")
+                        label = f"{Path(src).name}" + (f" · page {page+1}" if page != "" else "")
+                        st.caption(f"**Chunk {i} — {label}**")
+                        st.markdown(f'<div class="source-box">{doc.page_content[:300]}…</div>',
+                                    unsafe_allow_html=True)
+else:
+    # Chat mode: render from LangChain memory
+    for msg in get_memory_messages():
+        role = "user" if "Human" in type(msg).__name__ else "assistant"
+        with st.chat_message(role):
+            st.markdown(msg.content)
 
 # ── Handle new input ──────────────────────────────────────────────────────────
-if prompt := st.chat_input("Ask me anything…"):
-
-    # Show the user's message immediately
+if prompt := st.chat_input(
+    "Ask about your documents…" if rag_mode else "Ask me anything…"
+):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Stream the assistant reply
-    # chat_once() is a generator that both calls the chain AND saves to memory
-    with st.chat_message("assistant"):
-        try:
-            # st.write_stream consumes any generator of strings
-            st.write_stream(chat_once(prompt))
-        except Exception as e:
-            st.error(f"Error: {e}\n\nIs Ollama running? Try: `ollama serve`")
+    if rag_mode:
+        # ── RAG mode ──────────────────────────────────────────────────────────
+        # rag_answer() returns (answer_string, [source_Document, ...])
+        # It is NOT a generator — RetrievalQA returns the full answer at once.
+        st.session_state.rag_history.append({"role": "user", "content": prompt, "sources": []})
 
-    # No manual history append needed — LangChain memory handles it
-    st.rerun()  # refresh sidebar message count
+        with st.chat_message("assistant"):
+            with st.spinner("Searching documents…"):
+                answer, sources = rag_answer(prompt)
+            st.markdown(answer)
+
+            # Show source chunks in an expander so the user can verify
+            if sources:
+                with st.expander(f"Sources ({len(sources)} chunks used)"):
+                    for i, doc in enumerate(sources, 1):
+                        src = doc.metadata.get("source", "unknown")
+                        page = doc.metadata.get("page", "")
+                        label = f"{Path(src).name}" + (f" · page {page+1}" if page != "" else "")
+                        st.caption(f"**Chunk {i} — {label}**")
+                        st.markdown(f'<div class="source-box">{doc.page_content[:300]}…</div>',
+                                    unsafe_allow_html=True)
+
+        st.session_state.rag_history.append({
+            "role": "assistant",
+            "content": answer,
+            "sources": sources,
+        })
+
+    else:
+        # ── Chat mode (Phase 3 unchanged) ─────────────────────────────────────
+        with st.chat_message("assistant"):
+            try:
+                st.write_stream(chat_once(prompt))
+            except Exception as e:
+                st.error(f"Error: {e}\n\nIs Ollama running? Try: `ollama serve`")
+
+    st.rerun()

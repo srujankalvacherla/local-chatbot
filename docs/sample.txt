@@ -1,0 +1,37 @@
+# Sample Document — Local Chatbot RAG Test
+
+## Refund Policy
+All purchases come with a 30-day money-back guarantee. To request a refund,
+contact support@example.com with your order number. Refunds are processed
+within 5-7 business days.
+
+## Supported File Types
+The Local Chatbot supports PDF, TXT, and Markdown files for RAG indexing.
+Each file is split into chunks of 500 characters with 50-character overlap.
+
+## How RAG Works
+RAG stands for Retrieval-Augmented Generation. When you ask a question,
+the system converts it to a vector, searches ChromaDB for similar chunks,
+and passes those chunks to the language model as context. The model then
+answers based only on the retrieved content.
+
+## Getting Help
+For technical support, visit our documentation at docs.example.com or
+email support@example.com. Response times are typically under 24 hours.
+
+
+
+Since you already filed the earlier installments specifying yourself as the single buyer at 100%, trying to aggressively split the last payment 50-50 across two PANs can complicate things further. It would cause the total calculated math on the portal to mismatch with your previous filings.
+Because you need to clear the last payment immediately, here is how you should handle this situation practically:
+The Best Practical Fix: Continue as 100% on this final payment
+For this final installment, go ahead and select 100% under your share, complete the payment, and ensure the builder receives the entire remaining balance.
+Why this works right now:
+It maintains consistency across your personal ITR dashboard for all installment payments linked to this property transaction.
+The entire 1% total tax on the full transaction amount will successfully reach the Income Tax Department under your PAN.
+What you need to do afterwards (The Compliance Step)
+Since the sale deed formally lists both your names as co-owners, leaving your wife's PAN completely empty of property transactions can cause an automated mismatch flag in the system later on. To protect her from any "non-filing of TDS" penalties, you should correct her records by executing a Zero-TDS Correction Statement:
+Wait for processing: Allow 5 to 7 days for this final payment to fully clear and reflect in your Form 26AS / Annual Information Statement (AIS).
+Log into the TRACES portal: Log into the official TDS TRACES website (tdscpc.gov.in) using your credentials.
+File a Form 26QB/141 Correction: Go to the Online Correction section and choose the specific challans from your previous installments.
+Add her as a Co-Buyer: Use the correction tool to update the statements. You will keep the total property amount the same but edit the buyer details to formally link her PAN as the second co-buyer, setting her specific financial contribution share for those challans to 0%.
+By doing this, the system will officially acknowledge her ownership stake as per the sale deed, while clearly documenting that 100% of the financial tax obligation was legally routed and cleared through your PAN.

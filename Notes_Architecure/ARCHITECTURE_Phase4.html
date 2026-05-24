@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chain Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+        }
+        .flow {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            flex-grow: 1;
+        }
+        .step-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .step-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .component {
+            display: inline-block;
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+            margin: 2px;
+        }
+        .arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 24px;
+            margin: -10px 0;
+        }
+        .input-output {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .input-output-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .io-item {
+            color: #666;
+            font-size: 14px;
+            margin: 5px 0;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 RAG Chain Architecture Flow</h1>
+        
+        <div class="input-output">
+            <div class="input-output-title">📥 Input</div>
+            <div class="io-item">User Query: "your question"</div>
+        </div>
+
+        <div class="flow">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">🔍 Query Embedding</div>
+                    <div class="step-description">
+                        Embeds your question using the same embeddings model to convert text into a numerical vector
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">🗂️ Vector Search (Retriever)</div>
+                    <div class="step-description">
+                        <span class="component">ChromaDB</span> searches for the top-<span class="component">k</span> most relevant chunks using cosine similarity between vectors
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">📝 Prompt Construction</div>
+                    <div class="step-description">
+                        Fills <span class="component">{context}</span> with retrieved chunks and <span class="component">{question}</span> with your original question using <span class="component">RAG_PROMPT</span> template
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">🤖 LLM Processing</div>
+                    <div class="step-description">
+                        Sends the complete prompt to <span class="component">ChatOllama</span> (LLM) to generate a contextual answer
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">↓</div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="step-title">📤 Return Results</div>
+                    <div class="step-description">
+                        Returns answer along with source documents (the chunks used to generate the response)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-output">
+            <div class="input-output-title">📤 Output</div>
+            <div class="io-item">{ "result": "answer text", "source_documents": [chunk1, chunk2, ...] }</div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background: #f0f0f0; border-radius: 8px;">
+            <div style="font-weight: bold; margin-bottom: 10px; color: #333;">⚙️ Key Configuration</div>
+            <div style="font-size: 14px; color: #666; line-height: 1.8;">
+                <strong>Chain Type:</strong> "stuff" (combines all chunks into single prompt)<br>
+                <strong>Search Type:</strong> Cosine similarity<br>
+                <strong>Top-k:</strong> Configurable constant (TOP_K)
+            </div>
+        </div>
+    </div>
+</body>
+</html>

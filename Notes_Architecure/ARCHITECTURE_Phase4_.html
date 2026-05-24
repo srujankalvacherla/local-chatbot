@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Chatbot - Complete Architecture Masterclass</title>
+    <!-- Modern Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Mermaid.js for beautiful flowcharts -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            theme: 'dark',
+            startOnLoad: true,
+            flowchart: { useWidth: true, htmlLabels: true, curve: 'basis' },
+            themeVariables: {
+                primaryColor: '#312e81',
+                primaryTextColor: '#f8fafc',
+                lineColor: '#a855f7',
+                textColor: '#cbd5e1'
+            }
+        });
+    </script>
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #090d16 50%, #1e112a 100%);
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-purple: #a855f7;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-gold: #eab308;
+            --neon-shadow-purple: 0 0 20px rgba(168, 85, 247, 0.35);
+            --neon-shadow-blue: 0 0 20px rgba(59, 130, 246, 0.35);
+            --neon-shadow-green: 0 0 20px rgba(16, 185, 129, 0.35);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.65;
+            overflow-x: hidden;
+            padding: 50px 20px;
+        }
+
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+
+        /* --- Header Section --- */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #60a5fa, #c084fc, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            letter-spacing: -0.03em;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+            font-weight: 300;
+        }
+
+        .badge-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #cbd5e1;
+            backdrop-filter: blur(10px);
+        }
+
+        /* --- Section Titles --- */
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-top: 60px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* --- Master Grid Layout --- */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        /* --- Interactive Showcase Panel --- */
+        .interactive-board {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .board-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 20px;
+        }
+
+        .board-title h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .board-title p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .toggle-btn-group {
+            display: flex;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+        }
+
+        /* --- Architectural Diagram Area --- */
+        .diagram-viewport {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+            min-height: 480px;
+            position: relative;
+        }
+
+        .flow-container {
+            display: none;
+            width: 100%;
+            opacity: 0;
+            transform: scale(0.98);
+            transition: all 0.5s ease;
+        }
+
+        .flow-container.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .diagram-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .node {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            width: 250px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .node:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Color Coding Nodes */
+        .node.purple { border-left: 5px solid var(--accent-purple); }
+        .node.purple:hover { box-shadow: var(--neon-shadow-purple); border-color: var(--accent-purple); }
+        
+        .node.blue { border-left: 5px solid var(--accent-blue); }
+        .node.blue:hover { box-shadow: var(--neon-shadow-blue); border-color: var(--accent-blue); }
+
+        .node.green { border-left: 5px solid var(--accent-green); }
+        .node.green:hover { box-shadow: var(--neon-shadow-green); border-color: var(--accent-green); }
+
+        .node.selected {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: #cbd5e1 !important;
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .node-icon {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+        }
+
+        .node-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 6px;
+        }
+
+        .node-tech {
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 3px 10px;
+            border-radius: 99px;
+            color: var(--text-secondary);
+            display: inline-block;
+        }
+
+        /* Connectors */
+        .connector {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .connector-vertical {
+            width: 100%;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .arrow-svg {
+            stroke: var(--text-secondary);
+            stroke-width: 2.5;
+            fill: none;
+            stroke-dasharray: 8 4;
+            animation: dash 1.5s linear infinite;
+        }
+
+        .flow-container.active .arrow-svg {
+            stroke: var(--accent-purple);
+        }
+
+        .flow-container#chat-flow .arrow-svg {
+            stroke: var(--accent-blue);
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -12;
+            }
+        }
+
+        /* --- Interactive Info Panel --- */
+        .info-panel {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            padding: 25px;
+            margin-top: 30px;
+            min-height: 140px;
+            transition: all 0.3s ease;
+        }
+
+        .info-placeholder {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .info-placeholder-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .info-content {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .info-content.active {
+            display: block;
+        }
+
+        .info-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .info-badge-num {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(168, 85, 247, 0.3);
+        }
+
+        .info-headline {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .info-text {
+            color: #cbd5e1;
+            font-size: 0.98rem;
+            line-height: 1.65;
+            margin-bottom: 15px;
+        }
+
+        .beginner-analogy {
+            background: rgba(234, 179, 8, 0.07);
+            border-left: 3px solid var(--accent-gold);
+            padding: 12px 18px;
+            border-radius: 0 10px 10px 0;
+            font-size: 0.9rem;
+            color: #fef08a;
+        }
+
+        .analogy-title {
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+            color: var(--accent-gold);
+        }
+
+        /* --- Interactive Workspace Folder Explorer --- */
+        .workspace-explorer {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 850px) {
+            .workspace-explorer {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .directory-tree {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.92rem;
+            line-height: 1.8;
+            color: #e2e8f0;
+            overflow-x: auto;
+        }
+
+        .tree-root {
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+        }
+
+        .tree-item {
+            padding-left: 20px;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 4px 0;
+            border-radius: 4px;
+        }
+
+        .tree-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding-left: 25px;
+        }
+
+        .tree-item.dir {
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        .tree-item.file {
+            color: #38bdf8;
+        }
+
+        .explorer-detail {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .explorer-detail h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            color: #f1f5f9;
+            margin-bottom: 12px;
+        }
+
+        .explorer-detail p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .explorer-badge {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 4px 12px;
+            border-radius: 6px;
+            display: inline-block;
+            font-family: monospace;
+            font-size: 0.8rem;
+            align-self: flex-start;
+            margin-bottom: 12px;
+        }
+
+        /* --- ChromaDB Section Styling --- */
+        .chroma-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .chroma-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .chroma-intro {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 25px;
+            max-width: 950px;
+            font-weight: 300;
+        }
+
+        .chroma-table-container {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .chroma-table-header {
+            display: grid;
+            grid-template-columns: 140px 1fr 1fr 1fr;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 14px 20px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #cbd5e1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .chroma-table-row {
+            display: grid;
+            grid-template-columns: 140px 1fr 1fr 1fr;
+            padding: 16px 20px;
+            font-size: 0.88rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .chroma-table-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .chroma-table-row:last-child {
+            border-bottom: none;
+        }
+
+        .chroma-id {
+            font-family: 'Courier New', monospace;
+            color: var(--accent-purple);
+            font-weight: bold;
+        }
+
+        .chroma-doc {
+            color: #cbd5e1;
+            padding-right: 15px;
+            line-height: 1.4;
+        }
+
+        .chroma-vec {
+            color: var(--accent-blue);
+            font-size: 0.8rem;
+        }
+
+        .chroma-vec code {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .vec-dim {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .chroma-meta code {
+            background: rgba(234, 179, 8, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(234, 179, 8, 0.2);
+            color: #fef08a;
+            font-size: 0.8rem;
+        }
+
+        .chroma-uses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .chroma-use-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 18px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .chroma-use-card:hover {
+            transform: translateY(-5px);
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .chroma-use-card.border-purple { border-top: 4px solid var(--accent-purple); }
+        .chroma-use-card.border-purple:hover { box-shadow: 0 10px 20px -10px rgba(168, 85, 247, 0.3); }
+
+        .chroma-use-card.border-blue { border-top: 4px solid var(--accent-blue); }
+        .chroma-use-card.border-blue:hover { box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.3); }
+
+        .chroma-use-card.border-green { border-top: 4px solid var(--accent-green); }
+        .chroma-use-card.border-green:hover { box-shadow: 0 10px 20px -10px rgba(16, 185, 129, 0.3); }
+
+        .use-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .chroma-use-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .chroma-use-card p {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* --- Mermaid Diagrams Card --- */
+        .mermaid-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            margin-top: 30px;
+        }
+
+        .mermaid-container {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 25px;
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+        }
+
+        /* --- Tech Showcase Cards --- */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .tech-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .tech-card:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: scale(1.03);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .tech-logo {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .tech-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+        }
+
+        .tech-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .diagram-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .connector {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+            .chroma-table-header, .chroma-table-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 15px;
+            }
+            .chroma-table-header {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- HEADER -->
+        <header>
+            <div class="badge-container">
+                <span class="badge">🤖 Phi-3 (Ollama)</span>
+                <span class="badge">🎨 Streamlit Frontend</span>
+                <span class="badge">📚 LangChain LCEL & LangGraph</span>
+                <span class="badge">🗂️ Chroma Vector Store</span>
+            </div>
+            <h1>Local Chatbot Architecture</h1>
+            <p>The ultimate comprehensive masterclass to your offline AI companion—explaining document chunk ingestion pipelines, stateful conversational graphs, and local similarity searches.</p>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <div class="layout-grid">
+            
+            <!-- SECTION 1: INTERACTIVE FLOW PIPELINES -->
+            <div class="section-title">🔄 1. Interactive System Flows</div>
+            <div class="interactive-board">
+                
+                <div class="board-header">
+                    <div class="board-title">
+                        <h2>System Pipelines</h2>
+                        <p>Click on any component card to explore what happens under the hood!</p>
+                    </div>
+                    
+                    <div class="toggle-btn-group">
+                        <button class="toggle-btn active" onclick="switchFlow('rag')">📄 RAG Pipeline</button>
+                        <button class="toggle-btn" onclick="switchFlow('chat')">💬 General Chat</button>
+                    </div>
+                </div>
+
+                <!-- DIAGRAM VIEWPORT -->
+                <div class="diagram-viewport">
+                    
+                    <!-- FLOW 1: RAG PIPELINE (RETRIEVAL AUGMENTED GENERATION) -->
+                    <div id="rag-flow" class="flow-container active">
+                        
+                        <!-- Segment A: Document Uploading & Indexing -->
+                        <div style="width: 100%; border: 1px dashed rgba(168, 85, 247, 0.2); padding: 15px; border-radius: 20px; background: rgba(168, 85, 247, 0.02); margin-bottom: 20px;">
+                            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-purple); font-weight: 800; letter-spacing: 0.05em; text-align: center; margin-bottom: 10px;">
+                                Ingestion & Indexing Pipeline (Done once to save documents)
+                            </div>
+                            <div class="diagram-row">
+                                <div class="node purple" id="node-rag-upload" onclick="selectNode('rag-upload')">
+                                    <div class="node-icon">📥</div>
+                                    <div class="node-title">Upload Documents</div>
+                                    <span class="node-tech">docs/ (PDF, TXT, MD)</span>
+                                </div>
+                                
+                                <div class="connector">
+                                    <svg class="arrow-svg" width="40" height="10">
+                                        <line x1="0" y1="5" x2="35" y2="5" />
+                                    </svg>
+                                </div>
+
+                                <div class="node purple" id="node-rag-embed" onclick="selectNode('rag-embed')">
+                                    <div class="node-icon">✨</div>
+                                    <div class="node-title">Vectorize Chunks</div>
+                                    <span class="node-tech">Sentence Transformers</span>
+                                </div>
+
+                                <div class="connector">
+                                    <svg class="arrow-svg" width="40" height="10">
+                                        <line x1="0" y1="5" x2="35" y2="5" />
+                                    </svg>
+                                </div>
+
+                                <div class="node purple" id="node-rag-chroma" onclick="selectNode('rag-chroma')">
+                                    <div class="node-icon">🗄️</div>
+                                    <div class="node-title">Chroma Database</div>
+                                    <span class="node-tech">chroma_db/</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Spacer arrow from database to search query -->
+                        <div class="connector-vertical">
+                            <svg class="arrow-svg" width="10" height="40">
+                                <line x1="5" y1="0" x2="5" y2="35" />
+                            </svg>
+                        </div>
+
+                        <!-- Segment B: Query & Processing -->
+                        <div style="width: 100%; border: 1px dashed rgba(16, 185, 129, 0.2); padding: 15px; border-radius: 20px; background: rgba(16, 185, 129, 0.02);">
+                            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-green); font-weight: 800; letter-spacing: 0.05em; text-align: center; margin-bottom: 10px;">
+                                Runtime Query Pipeline (Executed for every question)
+                            </div>
+                            <div class="diagram-row">
+                                <div class="node green" id="node-rag-query" onclick="selectNode('rag-query')">
+                                    <div class="node-icon">💬</div>
+                                    <div class="node-title">User Query</div>
+                                    <span class="node-tech">Streamlit Input Box</span>
+                                </div>
+
+                                <div class="connector">
+                                    <svg class="arrow-svg" width="40" height="10">
+                                        <line x1="0" y1="5" x2="35" y2="5" />
+                                    </svg>
+                                </div>
+
+                                <div class="node green" id="node-rag-search" onclick="selectNode('rag-search')">
+                                    <div class="node-icon">🔍</div>
+                                    <div class="node-title">Retrieve Context</div>
+                                    <span class="node-tech">Similarity Search</span>
+                                </div>
+
+                                <div class="connector">
+                                    <svg class="arrow-svg" width="40" height="10">
+                                        <line x1="0" y1="5" x2="35" y2="5" />
+                                    </svg>
+                                </div>
+
+                                <div class="node green" id="node-rag-lcel" onclick="selectNode('rag-lcel')">
+                                    <div class="node-icon">⛓️</div>
+                                    <div class="node-title">LCEL RAG Chain</div>
+                                    <span class="node-tech">Prompt + Local LLM</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- FLOW 2: GENERAL CHAT FLOW -->
+                    <div id="chat-flow" class="flow-container">
+                        
+                        <div class="diagram-row">
+                            <div class="node blue" id="node-chat-input" onclick="selectNode('chat-input')">
+                                <div class="node-icon">🧑‍💻</div>
+                                <div class="node-title">User Message</div>
+                                <span class="node-tech">Streamlit Chat Input</span>
+                            </div>
+                        </div>
+
+                        <div class="connector-vertical">
+                            <svg class="arrow-svg" width="10" height="40">
+                                <line x1="5" y1="0" x2="5" y2="35" />
+                            </svg>
+                        </div>
+
+                        <div class="diagram-row">
+                            <div class="node blue" id="node-chat-graph" onclick="selectNode('chat-graph')">
+                                <div class="node-icon">🧠</div>
+                                <div class="node-title">LangGraph State</div>
+                                <span class="node-tech">MemorySaver Thread</span>
+                            </div>
+                        </div>
+
+                        <div class="connector-vertical">
+                            <svg class="arrow-svg" width="10" height="40">
+                                <line x1="5" y1="0" x2="5" y2="35" />
+                            </svg>
+                        </div>
+
+                        <div class="diagram-row">
+                            <div class="node blue" id="node-chat-llm" onclick="selectNode('chat-llm')">
+                                <div class="node-icon">🤖</div>
+                                <div class="node-title">Ollama LLM</div>
+                                <span class="node-tech">Phi-3 Local Model</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- INTERACTIVE INFO PANEL -->
+                <div class="info-panel" id="info-panel">
+                    <div class="info-placeholder" id="info-placeholder">
+                        <div class="info-placeholder-icon">💡</div>
+                        <h3>Interactive Learning Sandbox</h3>
+                        <p>Click on any step card above to reveal simple, beginner-friendly details about what that component does!</p>
+                    </div>
+
+                    <div class="info-content" id="info-content">
+                        <div class="info-header">
+                            <div class="info-badge-num" id="info-number">1</div>
+                            <div class="info-headline" id="info-headline">Component Name</div>
+                        </div>
+                        <p class="info-text" id="info-text">Detailed explanation goes here.</p>
+                        <div class="beginner-analogy">
+                            <div class="analogy-title">🍔 Beginner Analogy</div>
+                            <span id="info-analogy">Analogy goes here.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SECTION 2: CHROMADB DEEP DIVE -->
+            <div class="section-title">🗂️ 2. Vector Database Deep Dive</div>
+            <div class="chroma-section">
+                <h2 class="chroma-title">Inside ChromaDB: The Vector Filing Cabinet</h2>
+                <p class="chroma-intro">
+                    In traditional databases (like SQLite or PostgreSQL), data is stored in rows and columns of strict numbers and text. 
+                    But in a <strong>Vector Database</strong> like ChromaDB, there are no traditional tables. Instead, we organize data inside <strong>Collections</strong>. 
+                    Your app creates a collection named <code>local_docs</code>. Here is what is actually saved when you click **"Index docs"**:
+                </p>
+
+                <!-- Table Mockup -->
+                <div class="chroma-table-container">
+                    <div class="chroma-table-header">
+                        <div>ID 🔑</div>
+                        <div>Document Chunk 📄 (Text)</div>
+                        <div>Embedding Vector 📐 (Math Coordinates)</div>
+                        <div>Metadata 🏷️ (Filters)</div>
+                    </div>
+                    <div class="chroma-table-row">
+                        <div class="chroma-id">doc_chunk_001</div>
+                        <div class="chroma-doc">"...Ollama is a lightweight, customizable tool that lets you run large language models locally..."</div>
+                        <div class="chroma-vec"><code>[0.082, -0.194, 0.412, ..., -0.021]</code> <span class="vec-dim">(384 dimensions)</span></div>
+                        <div class="chroma-meta"><code>{"source": "docs/ollama.md"}</code></div>
+                    </div>
+                    <div class="chroma-table-row">
+                        <div class="chroma-id">doc_chunk_002</div>
+                        <div class="chroma-doc">"...ChromaDB serves as the vector store backend, persisting structured embeddings to `./chroma_db`..."</div>
+                        <div class="chroma-vec"><code>[-0.045, 0.312, -0.118, ..., 0.156]</code> <span class="vec-dim">(384 dimensions)</span></div>
+                        <div class="chroma-meta"><code>{"source": "docs/rag_guide.pdf", "page": 3}</code></div>
+                    </div>
+                </div>
+
+                <!-- Chroma Uses Grid -->
+                <div class="chroma-uses-grid">
+                    <div class="chroma-use-card border-purple">
+                        <div class="use-icon">🔍</div>
+                        <h3>Semantic Search</h3>
+                        <p>Traditional search looks for exact letters. ChromaDB calculates the similarity between the user's query vector and all stored document vectors, letting the app find relevant concepts even if the user uses completely different vocabulary!</p>
+                    </div>
+                    <div class="chroma-use-card border-blue">
+                        <div class="use-icon">🏷️</div>
+                        <h3>Metadata Filtering</h3>
+                        <p>Using structured keys (like <code>source</code> or <code>page</code>), Chroma can filter searches instantly—for example, searching only inside a specific PDF or restricting the context to a single document page range.</p>
+                    </div>
+                    <div class="chroma-use-card border-green">
+                        <div class="use-icon">⚡</div>
+                        <h3>Offline Speed</h3>
+                        <p>Everything in Chroma is written to <code>./chroma_db/</code> on your local disk. It does not require any external cloud account or internet connection, keeping your files completely secure and private.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: DIRECTORY EXPLORER -->
+            <div class="section-title">📂 3. Project Directory Map</div>
+            <div class="workspace-explorer">
+                
+                <div class="directory-tree">
+                    <div class="tree-root">📁 local-chatbot/</div>
+                    <div class="tree-item file" onclick="showFile('app.py')">📄 app.py</div>
+                    <div class="tree-item file" onclick="showFile('chat.py')">📄 chat.py</div>
+                    <div class="tree-item file" onclick="showFile('rag.py')">📄 rag.py</div>
+                    <div class="tree-item file" onclick="showFile('terminal.py')">📄 terminal.py</div>
+                    <div class="tree-item file" onclick="showFile('env')">📄 .env</div>
+                    <div class="tree-item dir" onclick="showFile('docs')">📁 docs/</div>
+                    <div class="tree-item dir" onclick="showFile('chromadb')">📁 chroma_db/</div>
+                    <div class="tree-item dir" onclick="showFile('notes')">📁 Notes_Architecure/</div>
+                </div>
+
+                <div class="explorer-detail" id="explorer-detail">
+                    <div class="explorer-badge" id="file-badge">File Role</div>
+                    <h3 id="file-name">Click a file to view role</h3>
+                    <p id="file-description">Hover or select any code file or folder to the left to see what it contributes to your Local Chatbot system.</p>
+                </div>
+
+            </div>
+
+            <!-- SECTION 4: HIGH-LEVEL ARCHITECTURE FLOWCHARTS -->
+            <div class="section-title">📊 4. High-Level Sequence Architecture</div>
+            <div class="mermaid-card">
+                <div style="margin-bottom: 25px; text-align: center;">
+                    <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; color: #f1f5f9; margin-bottom: 8px;">End-to-End Execution Sequence</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.92rem;">How user inquiries flow through Streamlit, retrieve vector data, format prompt templates, and return models tokens.</p>
+                </div>
+                <div class="mermaid-container">
+                    <div class="mermaid">
+                        sequenceDiagram
+                            autonumber
+                            participant User as User UI (app.py)
+                            participant LCEL as LangChain LCEL (rag.py)
+                            participant Chroma as Vector DB (Chroma)
+                            participant Ollama as Ollama API
+                            participant Model as Phi-3 Model
+
+                            User->>LCEL: Enter question string
+                            LCEL->>Chroma: similarity_search(question, k=3)
+                            Chroma-->>LCEL: Return top-3 text chunks
+                            LCEL->>LCEL: Format prompt template ({context} + {question})
+                            LCEL->>Ollama: Send formatted prompt via HTTP
+                            Ollama->>Model: Run model token inference
+                            Model-->>Ollama: Yield generated token array
+                            Ollama-->>LCEL: Stream complete answer
+                            LCEL-->>User: Render output answer + source metadata
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: CORE TECHNOLOGY STACK -->
+            <div class="section-title">🛠️ 5. Core Technology Stack</div>
+            <div class="tech-grid">
+                
+                <div class="tech-card">
+                    <div class="tech-logo">🎨</div>
+                    <div class="tech-name">Streamlit</div>
+                    <div class="tech-desc">A Python framework that creates beautiful interactive web UIs instantly without writing HTML, CSS, or JS.</div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="tech-logo">🗄️</div>
+                    <div class="tech-name">ChromaDB</div>
+                    <div class="tech-desc">A specialized database that stores text as numerical vectors to allow lightning-fast relevance searches.</div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="tech-logo">⛓️</div>
+                    <div class="tech-name">LangChain</div>
+                    <div class="tech-desc">The orchestration layer. Combines LLMs, prompts, and databases into modular "Chains" using modern LCEL syntax.</div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="tech-logo">🧠</div>
+                    <div class="tech-name">LangGraph</div>
+                    <div class="tech-desc">Maintains persistent conversational memory (threads) across state variables using memory checkpoints.</div>
+                </div>
+
+                <div class="tech-card">
+                    <div class="tech-logo">🦙</div>
+                    <div class="tech-name">Ollama</div>
+                    <div class="tech-desc">Runs state-of-the-art open-source LLMs (like Phi-3 or Gemma) entirely offline on your local computer.</div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SCRIPT FOR DYNAMIC INTERACTIONS -->
+    <script>
+        // Database of component explanations & analogies
+        const nodeDetails = {
+            'rag-upload': {
+                num: 1,
+                title: 'Loading Documents',
+                text: 'Your application scans the <strong>./docs</strong> directory for files (.pdf, .txt, .md). It reads the raw contents and cuts the long texts into smaller, overlapping chunks (e.g. 500 characters each). Cutting text into small chunks makes it easier to fetch only the relevant paragraphs later, rather than the whole book.',
+                analogy: 'Imagine you have a giant dictionary. Instead of handing the entire dictionary to your friend, you cut it up into individual index cards containing a few sentences each.'
+            },
+            'rag-embed': {
+                num: 2,
+                title: 'Sentence Embeddings (Vectorization)',
+                text: 'Computers do not understand English vocabulary directly, but they are great at math. Using the <strong>sentence-transformers/all-MiniLM-L6-v2</strong> model, your application converts each text chunk into a long list of numbers called an <em>embedding</em>. These numbers represent the semantic meaning of the words.',
+                analogy: 'Think of coordinates on a map. "Apple" and "Banana" will have coordinate points very close to each other in the "Fruit" region of space, whereas "Submarine" will be far away.'
+            },
+            'rag-chroma': {
+                num: 3,
+                title: 'Vector Database (Chroma)',
+                text: 'ChromaDB is a database specialized in holding these mathematical "meaning coordinates" (embeddings). Storing them in a vector database allows us to instantly calculate which chunks of text are mathematically similar to a user\'s question in milliseconds.',
+                analogy: 'A filing cabinet organized strictly by coordinate boxes. Chunks with similar topics are filed in the same drawer, making them incredibly fast to pull out.'
+            },
+            'rag-query': {
+                num: 4,
+                title: 'User Query Influx',
+                text: 'When a user enters a question into the Streamlit interface (e.g. "How do I configure Ollama?"), the query goes through the exact same vectorization process. It is translated into a temporary search coordinate representing the question\'s semantic meaning.',
+                analogy: 'You write down a coordinate search request: "Give me information closest to coordinate box [Fruit Area]".'
+            },
+            'rag-search': {
+                num: 5,
+                title: 'Context Retrieval',
+                text: 'The search coordinate is sent to ChromaDB. ChromaDB calculates the cosine similarity and retrieves the top-<strong>k</strong> (usually 3) text chunks that have the most matching meaning vectors. These are returned as the raw source documents.',
+                analogy: 'The librarian takes your search coordinate, walks straight to the "Fruit Area" drawer, and pulls out the 3 closest matching index cards.'
+            },
+            'rag-lcel': {
+                num: 6,
+                title: 'LCEL Chain Assembly & LLM Answering',
+                text: 'LangChain matches the user\'s original question with the retrieved chunks and plugs them into a <strong>strict prompt template</strong>. The prompt tells the LLM: <em>"Answer using ONLY the provided chunks. If not there, say you do not know."</em> This prompt is sent to Ollama (hosting Phi-3) to generate the final answer, avoiding hallucinations.',
+                analogy: 'You hand your friend the 3 index cards and ask: "Read these cards and tell me what they say about bananas. Do NOT guess or use outside knowledge!" Your friend reads them and writes down a perfect answer.'
+            },
+            
+            // General Chat flow details
+            'chat-input': {
+                num: 1,
+                title: 'Chat Message Input',
+                text: 'Unlike the RAG pipeline, the General Chat mode is for free-form conversation. The user types a message in the text input box, and it goes directly into the chat agent. It does not scan documents or query a vector database.',
+                analogy: 'You walk up to your friend and start chatting normally about any topic without showing them any reference booklets.'
+            },
+            'chat-graph': {
+                num: 2,
+                title: 'LangGraph Conversational Memory',
+                text: 'By default, LLMs are stateless (they forget everything after one message). To give the chatbot memory, we compile our conversation into a <strong>LangGraph StateGraph</strong>. Every time you chat, the <strong>MemorySaver</strong> checks your session\'s "thread_id", retrieves your past messages, and appends the new message to keep the history alive.',
+                analogy: 'A running text messaging thread on your phone. You can look back at past messages, allowing you to have a continuous, context-aware conversation.'
+            },
+            'chat-llm': {
+                num: 3,
+                title: 'Ollama LLM Processing',
+                text: 'The full conversational history (System prompt + past messages + new message) is formatted into a list of messages and streamed to the <strong>Ollama ChatOllama</strong> client running the Phi-3 model. The tokens (response words) are streamed back and displayed live on your screen.',
+                analogy: 'Your friend reviews the past conversation history in their mind, processes the new request, and begins talking back to you word-by-word.'
+            }
+        };
+
+        // Database of file explorer contents
+        const fileDetails = {
+            'app.py': {
+                badge: 'Streamlit Web UI',
+                title: 'app.py',
+                desc: 'This is the frontend entrypoint. It defines the layout, rendering forms, and handles user actions. It lets the user upload documents, triggers the indexing process in <code>rag.py</code>, maintains the conversational RAG session history, and toggles between Chat and RAG mode.'
+            },
+            'chat.py': {
+                badge: 'General Chat Module',
+                title: 'chat.py',
+                desc: 'Maintains stateful conversations. It constructs a LangGraph state network utilizing <code>MemorySaver</code> checkpointers. This creates independent conversation threads (by thread ID) ensuring that general conversations have persistent, multi-turn local memory.'
+            },
+            'rag.py': {
+                badge: 'RAG Engine Orchestrator',
+                title: 'rag.py',
+                desc: 'Coordinates raw file manipulation and database storage. It loads documents, segments texts using a recursive text splitter, vectors chunks via Hugging Face embeddings, stores vectors in Chroma, and runs similarity queries inside an LCEL pipeline.'
+            },
+            'terminal.py': {
+                badge: 'Rich Terminal CLI',
+                title: 'terminal.py',
+                desc: 'An optional text-only CLI interface for learning. Uses the <code>rich</code> library to render console grids, colorize text outputs, and manage user command loops (like /history and /clear) sharing the exact same <code>chat.py</code> module.'
+            },
+            'env': {
+                badge: 'System Environment Variables',
+                title: '.env',
+                desc: 'Holds all configurable keys and variables. Changes the local model parameters (like MODEL=phi3), adjusts temperature values, set chunk overlapping constants, and targets different port bases for the local Ollama instance.'
+            },
+            'docs': {
+                badge: 'Local Documents Directory',
+                title: 'docs/',
+                desc: 'A physical repository folder created dynamically inside your workspace. When you drag and drop PDF, TXT, or MD files into the Streamlit Web interface, they are written directly to this directory prior to vectorization.'
+            },
+            'chromadb': {
+                badge: 'Vector Storage Folder',
+                title: 'chroma_db/',
+                desc: 'The physical database directory for ChromaDB. Once you index your documents, Chroma compiles the mathematical coordinates, text indices, and document relations into binary index files persisted here on disk.'
+            },
+            'notes': {
+                badge: 'Architecture Assets',
+                title: 'Notes_Architecture/',
+                desc: 'Contains all reference materials, visual flowcharts, HTML layouts, and architectural mockups used to explain the application workflows to developers and beginners.'
+            }
+        };
+
+        // Switch visible diagram flows
+        function switchFlow(flowName) {
+            const ragFlow = document.getElementById('rag-flow');
+            const chatFlow = document.getElementById('chat-flow');
+            const btns = document.querySelectorAll('.toggle-btn');
+
+            // Reset selected nodes
+            document.querySelectorAll('.node').forEach(el => el.classList.remove('selected'));
+            
+            // Hide info panel details
+            document.getElementById('info-placeholder').style.display = 'flex';
+            document.getElementById('info-content').classList.remove('active');
+
+            if (flowName === 'rag') {
+                ragFlow.classList.add('active');
+                chatFlow.classList.remove('active');
+                btns[0].classList.add('active');
+                btns[1].classList.remove('active');
+            } else {
+                chatFlow.classList.add('active');
+                ragFlow.classList.remove('active');
+                btns[1].classList.add('active');
+                btns[0].classList.remove('active');
+            }
+        }
+
+        // Highlight selected node and render its details
+        function selectNode(nodeId) {
+            // Remove 'selected' from all nodes
+            document.querySelectorAll('.node').forEach(el => el.classList.remove('selected'));
+            
+            // Select the clicked node
+            const clickedNode = document.getElementById('node-' + nodeId);
+            if (clickedNode) {
+                clickedNode.classList.add('selected');
+            }
+
+            // Fill details into info panel
+            const data = nodeDetails[nodeId];
+            if (data) {
+                document.getElementById('info-placeholder').style.display = 'none';
+                
+                document.getElementById('info-number').innerText = data.num;
+                document.getElementById('info-headline').innerText = data.title;
+                document.getElementById('info-text').innerHTML = data.text;
+                document.getElementById('info-analogy').innerText = data.analogy;
+                
+                const content = document.getElementById('info-content');
+                content.classList.add('active');
+                
+                // Add minor glow matching flow type
+                const panel = document.getElementById('info-panel');
+                if (nodeId.startsWith('rag-u') || nodeId.startsWith('rag-e') || nodeId.startsWith('rag-c')) {
+                    panel.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.2)';
+                } else if (nodeId.startsWith('rag-')) {
+                    panel.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.2)';
+                } else {
+                    panel.style.boxShadow = '0 0 15px rgba(59, 130, 246, 0.2)';
+                }
+            }
+        }
+
+        // Handle File explorer selector
+        function showFile(fileName) {
+            const data = fileDetails[fileName];
+            if (data) {
+                document.getElementById('file-badge').innerText = data.badge;
+                document.getElementById('file-name').innerText = data.title;
+                document.getElementById('file-description').innerHTML = data.desc;
+            }
+        }
+    </script>
+</body>
+</html>

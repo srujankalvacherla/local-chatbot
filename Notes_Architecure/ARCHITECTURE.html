@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Chatbot - Architecture & Flow</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        section {
+            margin-bottom: 50px;
+        }
+        
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .diagram-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+            overflow-x: auto;
+        }
+        
+        .file-structure {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.95em;
+            border-left: 5px solid #667eea;
+        }
+        
+        .file-structure code {
+            color: #333;
+        }
+        
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .component-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .component-card:hover {
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .component-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .component-card code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            color: #d63384;
+        }
+        
+        .component-card p {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .flow-step {
+            background: white;
+            border-left: 5px solid #764ba2;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .flow-step h4 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .flow-step p {
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #764ba2;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .tech-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-top: 4px solid #667eea;
+        }
+        
+        .tech-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .tech-item ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .tech-item li {
+            color: #666;
+            padding: 5px 0;
+            font-size: 0.95em;
+        }
+        
+        .tech-item li:before {
+            content: "→ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #ffc107;
+            margin: 20px 0;
+        }
+        
+        .highlight strong {
+            color: #856404;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 15px 0;
+        }
+        
+        .key-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .feature-box p {
+            color: #666;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Local Chatbot</h1>
+            <p>Architecture & Data Flow Documentation</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Phase 3: LangChain-Powered LLM Module</p>
+        </header>
+        
+        <div class="content">
+            <!-- PROJECT OVERVIEW -->
+            <section>
+                <h2>📋 Project Overview</h2>
+                <p>Local Chatbot is a Python-based conversational AI application that runs on your local machine using Ollama. It provides multiple interfaces (Streamlit web UI and terminal) powered by a unified LangChain-based chat engine.</p>
+                
+                <div class="highlight">
+                    <strong>Key Characteristic:</strong> This is Phase 3, which introduces LangChain for better abstraction, automatic memory management, and cleaner separation between UI and LLM logic.
+                </div>
+                
+                <div class="file-structure">
+                    <strong>Project Structure:</strong><br><br>
+                    <code>
+local-chatbot/<br>
+├── app.py                 # Streamlit web UI<br>
+├── chat.py                # LangChain LLM module (core logic)<br>
+├── terminal.py            # Terminal-based UI<br>
+├── Requirements.txt       # Python dependencies<br>
+└── local-chatbot.code-workspace  # VS Code workspace config<br>
+                    </code>
+                </div>
+            </section>
+            
+            <!-- SYSTEM ARCHITECTURE -->
+            <section>
+                <h2>🏗️ System Architecture</h2>
+                
+                <h3>High-Level Architecture Diagram</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph TB
+                            subgraph UI["User Interfaces"]
+                                A["🌐 Streamlit Web UI<br/>app.py"]
+                                B["⌨️ Terminal UI<br/>terminal.py"]
+                            end
+                            
+                            subgraph CHAT["Chat Module<br/>chat.py"]
+                                C["LangChain Components"]
+                                C1["ChatOllama<br/>(LLM Model)"]
+                                C2["ChatPromptTemplate<br/>(Prompt Formatting)"]
+                                C3["ConversationBufferMemory<br/>(History Management)"]
+                                C4["LLMChain<br/>(Orchestrator)"]
+                            end
+                            
+                            subgraph LOCAL["Local Infrastructure"]
+                                D["🔌 Ollama Server<br/>http://localhost:11434"]
+                                E["🧠 Local LLM Model<br/>(phi3, etc.)"]
+                            end
+                            
+                            A --> C
+                            B --> C
+                            C1 --> D
+                            D --> E
+                            C2 --> C4
+                            C3 --> C4
+                            C1 --> C4
+                            
+                            style A fill:#667eea,color:#fff
+                            style B fill:#667eea,color:#fff
+                            style C fill:#764ba2,color:#fff
+                            style D fill:#ff6b6b,color:#fff
+                            style E fill:#ff6b6b,color:#fff
+                    </div>
+                </div>
+                
+                <h3>Component Breakdown</h3>
+                <div class="component-grid">
+                    <div class="component-card">
+                        <h4>📦 chat.py (Core)</h4>
+                        <p>The heart of the application. Contains:</p>
+                        <ul>
+                            <li><code>chat_once()</code> - Single message handler</li>
+                            <li><code>clear_memory()</code> - Reset conversation</li>
+                            <li><code>get_memory_messages()</code> - Retrieve history</li>
+                            <li><code>get_model()</code> - Return model name</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="component-card">
+                        <h4>🌐 app.py (Web UI)</h4>
+                        <p>Streamlit-based web interface:</p>
+                        <ul>
+                            <li>Chat message display</li>
+                            <li>User input handling</li>
+                            <li>Settings sidebar (temperature)</li>
+                            <li>Memory visualization</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="component-card">
+                        <h4>⌨️ terminal.py (CLI)</h4>
+                        <p>Terminal interface using Rich:</p>
+                        <ul>
+                            <li>Command-line chat</li>
+                            <li>Commands: /history, /clear, /quit</li>
+                            <li>Colored output</li>
+                            <li>Shared memory with web UI</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- DATA FLOW -->
+            <section>
+                <h2>🔄 Data Flow</h2>
+                
+                <h3>User Message Flow (Step-by-Step)</h3>
+                
+                <div class="flow-step">
+                    <span class="step-number">1</span>
+                    <h4>User Submits Message</h4>
+                    <p><strong>Location:</strong> app.py (Streamlit) or terminal.py (CLI)</p>
+                    <p>User types a message and hits send/enter. The UI captures the input string.</p>
+                </div>
+                
+                <div class="flow-step">
+                    <span class="step-number">2</span>
+                    <h4>Chat Function Called</h4>
+                    <p><strong>Location:</strong> chat.py → chat_once()</p>
+                    <p>The UI calls <code>chat_once(user_input)</code> which returns a generator that yields response tokens.</p>
+                </div>
+                
+                <div class="flow-step">
+                    <span class="step-number">3</span>
+                    <h4>Memory Injection</h4>
+                    <p><strong>Location:</strong> chat.py → ConversationBufferMemory</p>
+                    <p>LLMChain automatically retrieves previous messages from ConversationBufferMemory and injects them into the prompt.</p>
+                </div>
+                
+                <div class="flow-step">
+                    <span class="step-number">4</span>
+                    <h4>Prompt Construction</h4>
+                    <p><strong>Location:</strong> chat.py → ChatPromptTemplate</p>
+                    <p>Template formats: <code>[System Prompt] + [Chat History] + [User Message]</code> into a structured prompt.</p>
+                </div>
+                
+                <div class="flow-step">
+                    <span class="step-number">5</span>
+                    <h4>Send to Ollama</h4>
+                    <p><strong>Location:</strong> chat.py → ChatOllama → http://localhost:11434</p>
+                    <p>LLMChain sends the formatted prompt to ChatOllama, which connects to the local Ollama server.</p>
+                </div>
+                
+                <div class="flow-step">
+                    <span class="step-number">6</span>
+                    <h4>LLM Processes & Streams</h4>
+                    <p><strong>Location:</strong> Ollama Server (External)</p>
+                    <p>Ollama runs the LLM (e.g., phi3) and streams response tokens back via HTTP.</p>
+                </div>
+                
+                <div class="flow-step">
+                    <span class="step-number">7</span>
+                    <h4>Yield Tokens to UI</h4>
+                    <p><strong>Location:</strong> chat.py → chat_once() generator</p>
+                    <p>Tokens are yielded one-by-one for real-time display. The UI renders them as they arrive.</p>
+                </div>
+                
+                <div class="flow-step">
+                    <span class="step-number">8</span>
+                    <h4>Store in Memory</h4>
+                    <p><strong>Location:</strong> chat.py → ConversationBufferMemory</p>
+                    <p>Once the response is complete, LLMChain automatically saves both user message and assistant response to memory.</p>
+                </div>
+                
+                <div class="flow-step">
+                    <span class="step-number">9</span>
+                    <h4>Display in Chat</h4>
+                    <p><strong>Location:</strong> app.py / terminal.py</p>
+                    <p>UI fetches memory messages via <code>get_memory_messages()</code> and displays the full conversation.</p>
+                </div>
+            </section>
+            
+            <!-- DETAILED FLOW DIAGRAM -->
+            <section>
+                <h3>Complete Interaction Flow Diagram</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        sequenceDiagram
+                            participant User
+                            participant UI as Streamlit/Terminal<br/>UI
+                            participant ChatModule as chat.py<br/>chat_once()
+                            participant LangChain as LangChain<br/>Components
+                            participant Ollama as Ollama<br/>Server
+                            participant LLM as Local LLM<br/>Model
+                            
+                            User->>UI: Types message
+                            UI->>ChatModule: chat_once(user_input)
+                            ChatModule->>LangChain: chain.invoke({input: msg})
+                            
+                            LangChain->>LangChain: Load history from memory
+                            LangChain->>LangChain: Format prompt template<br/>[System + History + Input]
+                            
+                            LangChain->>Ollama: POST /api/generate<br/>streaming=true
+                            Ollama->>LLM: Process prompt
+                            LLM->>Ollama: Generate tokens (stream)
+                            
+                            loop Stream Tokens
+                                Ollama-->>ChatModule: Token
+                                ChatModule-->>UI: Yield token
+                                UI-->>User: Display token
+                            end
+                            
+                            ChatModule->>LangChain: Response complete
+                            LangChain->>LangChain: Save to memory<br/>[User msg + AI response]
+                            
+                            LangChain-->>ChatModule: Generator finishes
+                            ChatModule-->>UI: Iteration complete
+                            UI->>ChatModule: get_memory_messages()
+                            ChatModule-->>UI: List of messages
+                            UI-->>User: Render full chat history
+                    </div>
+                </div>
+            </section>
+            
+            <!-- LANGCHAIN COMPONENTS -->
+            <section>
+                <h2>🧩 LangChain Components</h2>
+                
+                <h3>Core Components Used</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Module</th>
+                            <th>Purpose</th>
+                            <th>Configuration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>ChatOllama</code></td>
+                            <td>langchain_ollama</td>
+                            <td>LLM model interface to local Ollama</td>
+                            <td>model, base_url, temperature, streaming=True</td>
+                        </tr>
+                        <tr>
+                            <td><code>ChatPromptTemplate</code></td>
+                            <td>langchain_core.prompts</td>
+                            <td>Structures prompt with system + history + input</td>
+                            <td>from_messages([system, history, human])</td>
+                        </tr>
+                        <tr>
+                            <td><code>MessagesPlaceholder</code></td>
+                            <td>langchain_core.prompts</td>
+                            <td>Slot for history injection in template</td>
+                            <td>variable_name="chat_history"</td>
+                        </tr>
+                        <tr>
+                            <td><code>ConversationBufferMemory</code></td>
+                            <td>langchain.memory</td>
+                            <td>Stores all conversation turns</td>
+                            <td>memory_key="chat_history", return_messages=True</td>
+                        </tr>
+                        <tr>
+                            <td><code>LLMChain</code></td>
+                            <td>langchain.chains</td>
+                            <td>Orchestrates: prompt + llm + memory</td>
+                            <td>prompt, llm, memory, verbose=False</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>How They Connect</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph LR
+                            A["User Input<br/>e.g. 'Hello'"]
+                            B["ChatPromptTemplate<br/>(Format)"]
+                            C["ConversationBufferMemory<br/>(History)"]
+                            D["ChatOllama<br/>(Model)"]
+                            E["LLMChain<br/>(Orchestrator)"]
+                            F["Ollama Server<br/>(Local LLM)"]
+                            G["Response Tokens<br/>e.g. 'Hi, how can I help?'"]
+                            
+                            A --> E
+                            C --> E
+                            E --> B
+                            E --> D
+                            B --> E
+                            D --> F
+                            F --> D
+                            D --> G
+                            
+                            style E fill:#764ba2,color:#fff
+                            style F fill:#ff6b6b,color:#fff
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ENVIRONMENT & DEPENDENCIES -->
+            <section>
+                <h2>🛠️ Technology Stack</h2>
+                
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <h4>Core Libraries</h4>
+                        <ul>
+                            <li>langchain ≥ 0.2.0</li>
+                            <li>langchain-core ≥ 0.2.0</li>
+                            <li>langchain-ollama ≥ 0.1.0</li>
+                            <li>openai ≥ 1.0.0</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-item">
+                        <h4>UI Frameworks</h4>
+                        <ul>
+                            <li>streamlit ≥ 1.35.0 (Web UI)</li>
+                            <li>rich ≥ 13.0.0 (Terminal UI)</li>
+                            <li>python-dotenv ≥ 1.0.0</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-item">
+                        <h4>Infrastructure</h4>
+                        <ul>
+                            <li>Ollama (Local LLM Server)</li>
+                            <li>Python 3.8+</li>
+                            <li>HTTP/REST (Ollama API)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3>Environment Variables (.env)</h3>
+                <div class="code-block">
+MODEL=phi3
+OLLAMA_BASE_URL=http://localhost:11434
+TEMPERATURE=0.7
+SYSTEM_PROMPT=You are a helpful assistant. Be concise and clear.
+                </div>
+            </section>
+            
+            <!-- KEY FEATURES -->
+            <section>
+                <h2>✨ Key Features & Design Decisions</h2>
+                
+                <div class="key-features">
+                    <div class="feature-box">
+                        <h4>🔌 Pluggable UI</h4>
+                        <p>Both Streamlit and terminal interfaces share the same chat.py module. Users can run both simultaneously and share conversation history.</p>
+                    </div>
+                    
+                    <div class="feature-box">
+                        <h4>🧠 Automatic Memory Management</h4>
+                        <p>ConversationBufferMemory automatically stores and retrieves conversation history. No manual list management needed.</p>
+                    </div>
+                    
+                    <div class="feature-box">
+                        <h4>⚡ Real-Time Streaming</h4>
+                        <p>Response tokens stream in real-time from Ollama. Users see text appear character-by-character instead of waiting for full responses.</p>
+                    </div>
+                    
+                    <div class="feature-box">
+                        <h4>📦 Clean Separation</h4>
+                        <p>UI logic is isolated from LLM logic. Changes to chat.py (LangChain integration) require minimal changes to app.py.</p>
+                    </div>
+                    
+                    <div class="feature-box">
+                        <h4>🚀 Local-First</h4>
+                        <p>Everything runs locally. Ollama provides the LLM, no cloud API calls, full privacy.</p>
+                    </div>
+                    
+                    <div class="feature-box">
+                        <h4>🎛️ Configurable</h4>
+                        <p>Model, temperature, system prompt, and Ollama URL all configurable via environment variables.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- CODE EXAMPLES -->
+            <section>
+                <h2>💻 Key Code Flows</h2>
+                
+                <h3>How chat_once() Works</h3>
+                <div class="code-block">
+def chat_once(user_input):
+    """
+    1. Takes user message
+    2. LLMChain retrieves memory + formats prompt
+    3. Sends to ChatOllama (Ollama)
+    4. Yields tokens as they arrive (streaming)
+    5. Automatically saves to memory when done
+    """
+    for token in chain.stream({"input": user_input}):
+        yield token
+                </div>
+                
+                <h3>Memory Flow: ChatPromptTemplate</h3>
+                <div class="code-block">
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant. Be concise and clear."),
+    MessagesPlaceholder(variable_name="chat_history"),  # ← Gets filled from memory
+    ("human", "{input}"),  # ← Gets filled with user input
+])
+
+# Final prompt looks like:
+# ---
+# System: You are a helpful assistant...
+# Human: How are you?
+# Assistant: I'm doing well, thanks!
+# Human: What's 2+2?
+# ---
+                </div>
+                
+                <h3>Memory Management</h3>
+                <div class="code-block">
+# Store conversation automatically
+memory = ConversationBufferMemory(
+    memory_key="chat_history",
+    return_messages=True,  # Store as Message objects
+)
+
+# LLMChain automatically:
+# 1. Loads messages from memory
+# 2. Injects into prompt template
+# 3. Saves user + assistant messages after response
+
+# To clear: memory.clear()
+# To retrieve: memory.load_memory_variables({})["chat_history"]
+                </div>
+            </section>
+            
+            <!-- EXECUTION FLOW -->
+            <section>
+                <h2>🚀 Execution Paths</h2>
+                
+                <h3>Running the Web UI</h3>
+                <div class="code-block">
+streamlit run app.py
+
+# What happens:
+# 1. Streamlit loads app.py
+# 2. Imports chat.py and builds LLMChain (once)
+# 3. Renders Streamlit UI
+# 4. User types → calls chat_once() → displays tokens
+# 5. Memory persists across reruns (Streamlit sessions)
+                </div>
+                
+                <h3>Running the Terminal UI</h3>
+                <div class="code-block">
+python terminal.py
+
+# What happens:
+# 1. Loads chat.py (same module as web UI)
+# 2. Displays welcome banner
+# 3. Infinite loop: read user input → chat_once() → stream response
+# 4. Commands: /history, /clear, /quit
+# 5. Memory persists across messages (within same terminal session)
+                </div>
+                
+                <h3>Running Both Simultaneously</h3>
+                <div class="code-block">
+# Terminal 1:
+streamlit run app.py  # Starts at http://localhost:8501
+
+# Terminal 2:
+python terminal.py    # Run terminal UI
+
+# Result:
+# - Both share the SAME chat.py module
+# - Both share the SAME memory instance
+# - Send message in web UI → appears in terminal and vice-versa
+                </div>
+            </section>
+            
+            <!-- DEPLOYMENT & REQUIREMENTS -->
+            <section>
+                <h2>📦 Setup & Requirements</h2>
+                
+                <h3>Prerequisites</h3>
+                <div class="flow-step">
+                    <h4>1. Ollama Setup</h4>
+                    <p>Download and run Ollama: <code>ollama serve</code></p>
+                    <p>Pull a model: <code>ollama pull phi3</code></p>
+                </div>
+                
+                <div class="flow-step">
+                    <h4>2. Python Environment</h4>
+                    <p>Python 3.8+ required</p>
+                </div>
+                
+                <div class="flow-step">
+                    <h4>3. Dependencies</h4>
+                    <p><code>pip install -r Requirements.txt</code></p>
+                </div>
+                
+                <div class="flow-step">
+                    <h4>4. Environment Variables</h4>
+                    <p>Create <code>.env</code> file with configuration (MODEL, OLLAMA_BASE_URL, etc.)</p>
+                </div>
+            </section>
+            
+            <!-- PHASE EVOLUTION -->
+            <section>
+                <h2>📈 Phase Evolution (Context)</h2>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>LLM Client</th>
+                            <th>History Management</th>
+                            <th>Orchestration</th>
+                            <th>Key Benefit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Phase 1</strong></td>
+                            <td>OpenAI Python Client</td>
+                            <td>Manual list[]</td>
+                            <td>Manual prompts</td>
+                            <td>Basic functionality</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 2</strong></td>
+                            <td>OpenAI Client</td>
+                            <td>Manual list[]</td>
+                            <td>Manual + helper functions</td>
+                            <td>Code organization</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 3 (Current)</strong></td>
+                            <td><strong>ChatOllama</strong></td>
+                            <td><strong>ConversationBufferMemory</strong></td>
+                            <td><strong>LLMChain</strong></td>
+                            <td><strong>Abstraction, scalability, maintainability</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="highlight">
+                    <strong>Why LangChain in Phase 3?</strong> LangChain provides standardized abstractions that make the code more maintainable, enable easier switching between models/backends, and automate common patterns like memory management and prompt formatting.
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <p><strong>Local Chatbot Architecture Documentation</strong> | Generated on {{ date }} | Phase 3 · LangChain-Powered</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">For detailed code, see: app.py, chat.py, terminal.py</p>
+        </footer>
+    </div>
+    
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+        mermaid.contentLoaded();
+    </script>
+</body>
+</html>
